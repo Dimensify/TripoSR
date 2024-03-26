@@ -9,7 +9,7 @@ import torch
 from PIL import Image
 
 from tsr.system import TSR
-from tsr.utils import remove_background, resize_foreground, save_video
+from tsr.utils import remove_background, resize_foreground, save_video, to_gradio_3d_orientation
 
 
 class Timer:
@@ -158,5 +158,7 @@ for i, image in enumerate(images):
 
     timer.start("Exporting mesh")
     meshes = model.extract_mesh(scene_codes, resolution=args.mc_resolution)
+    # Reorient the mesh to Gradio 3D orientation
+    meshes[0] = to_gradio_3d_orientation(meshes[0])
     meshes[0].export(os.path.join(output_dir, str(i), f"mesh.{args.model_save_format}"))
     timer.end("Exporting mesh")
