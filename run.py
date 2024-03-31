@@ -2,14 +2,14 @@ import argparse
 import logging
 import os
 import time
-
+import torch
+import intel_extension_for_pytorch as ipex
 import numpy as np
 import rembg
-import torch
 from PIL import Image
 
 from tsr.system import TSR
-from tsr.utils import remove_background, resize_foreground, save_video, to_gradio_3d_orientation
+from tsr.utils import remove_background, resize_foreground, save_video
 
 
 class Timer:
@@ -102,8 +102,12 @@ output_dir = args.output_dir
 os.makedirs(output_dir, exist_ok=True)
 
 device = args.device
-if not torch.cuda.is_available():
-    device = "cpu"
+# if not torch.cuda.is_available():
+#     device = "cpu"
+
+# device = torch.device('xpu' if torch.xpu.is_available() else 'cpu')
+# device = 'cpu'
+device='xpu'
 
 timer.start("Initializing model")
 model = TSR.from_pretrained(
@@ -112,7 +116,10 @@ model = TSR.from_pretrained(
     weight_name="model.ckpt",
 )
 model.renderer.set_chunk_size(args.chunk_size)
+model.eval()
+#model = model.to(memory_format=torch.channels_last)
 model.to(device)
+model = ipex.optimize(model, dtype=torch.float32)
 timer.end("Initializing model")
 
 timer.start("Processing images")
@@ -158,7 +165,6 @@ for i, image in enumerate(images):
 
     timer.start("Exporting mesh")
     meshes = model.extract_mesh(scene_codes, resolution=args.mc_resolution)
-    # Reorient the mesh to Gradio 3D orientation
-    meshes[0] = to_gradio_3d_orientation(meshes[0])
     meshes[0].export(os.path.join(output_dir, str(i), f"mesh.{args.model_save_format}"))
+    print(meshes)
     timer.end("Exporting mesh")

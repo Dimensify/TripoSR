@@ -6,6 +6,7 @@ from typing import List, Union
 import numpy as np
 import PIL.Image
 import torch
+import intel_extension_for_pytorch as ipex #Raj added
 import torch.nn.functional as F
 import trimesh
 from einops import rearrange
