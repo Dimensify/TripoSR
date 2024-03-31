@@ -105,9 +105,8 @@ device = args.device
 # if not torch.cuda.is_available():
 #     device = "cpu"
 
-# device = torch.device('xpu' if torch.xpu.is_available() else 'cpu')
+device = torch.device('xpu' if torch.xpu.is_available() else 'cpu')
 # device = 'cpu'
-device='xpu'
 
 timer.start("Initializing model")
 model = TSR.from_pretrained(
